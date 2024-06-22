@@ -39,7 +39,7 @@ export class ArticleController {
     console.log(file);
   }
   create(@Body() createArticleDto: CreateArticleDto) {
-    // return this.articleService.create(createArticleDto);
+    return this.articleService.create(createArticleDto);
   }
 
   @Get()
