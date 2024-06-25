@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './entities/article.entity';
 import { Repository } from 'typeorm';
+import { unlinkSync } from 'fs';
 
 @Injectable()
 export class ArticleService {
@@ -13,7 +14,10 @@ export class ArticleService {
   ) {}
 
   async create(createArticleDto: CreateArticleDto) {
-    const article = this.articleRepository.create(createArticleDto);
+    const article = this.articleRepository.create({
+      ...createArticleDto,
+      image: createArticleDto.image.filename,
+    });
     return await this.articleRepository.save(article);
   }
 
@@ -26,10 +30,27 @@ export class ArticleService {
   }
 
   async update(id: string, updateArticleDto: UpdateArticleDto) {
-    return await this.articleRepository.update(id, updateArticleDto);
+    const oldArt = this.findOne(id);
+    if (!oldArt) {
+      throw new BadRequestException('Article not found');
+    }
+    const article = {
+      ...updateArticleDto,
+      image: updateArticleDto.image.filename,
+    };
+    return await this.articleRepository.update(id, article);
   }
 
   async remove(id: string) {
     return await this.articleRepository.delete(id);
+  }
+}
+
+async function deleteFile(filePath: string): Promise<void> {
+  try {
+    unlinkSync(filePath);
+    console.log(`Deleted file: ${filePath}`);
+  } catch (error) {
+    console.error(`Error deleting file: ${error.message}`);
   }
 }

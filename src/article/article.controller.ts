@@ -8,37 +8,26 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
 import { UpdateArticleDto } from './dto/update-article.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname } from 'path';
-
-const storage = diskStorage({
-  destination: './uploads/image',
-  filename: (req, file, cb) => {
-    const name = file.originalname.split('.')[0];
-    const extension = extname(file.originalname);
-    const randomName = Array(32)
-      .fill(null)
-      .map(() => Math.round(Math.random() * 16).toString(16))
-      .join('');
-    cb(null, `${name}-${randomName}${extension}`);
-  },
-});
+import { storage } from 'src/config/multer.config';
 
 @Controller('article')
 export class ArticleController {
   constructor(private readonly articleService: ArticleService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('file', { storage }))
-  uploadFile(@UploadedFile() file) {
-    console.log(file);
-  }
-  create(@Body() createArticleDto: CreateArticleDto) {
+  @UseInterceptors(FileInterceptor('image', { storage }))
+  create(
+    @Body('price', ParseIntPipe) price: number,
+    @Body() createArticleDto: CreateArticleDto,
+    @UploadedFile() image: Express.Multer.File,
+  ) {
+    createArticleDto.image = image;
     return this.articleService.create(createArticleDto);
   }
 
