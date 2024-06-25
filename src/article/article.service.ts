@@ -45,12 +45,3 @@ export class ArticleService {
     return await this.articleRepository.delete(id);
   }
 }
-
-async function deleteFile(filePath: string): Promise<void> {
-  try {
-    unlinkSync(filePath);
-    console.log(`Deleted file: ${filePath}`);
-  } catch (error) {
-    console.error(`Error deleting file: ${error.message}`);
-  }
-}
