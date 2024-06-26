@@ -8,7 +8,7 @@ import {
   Delete,
   UseInterceptors,
   UploadedFile,
-  ParseIntPipe,
+  ParseFloatPipe,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create-article.dto';
@@ -23,11 +23,11 @@ export class ArticleController {
   @Post()
   @UseInterceptors(FileInterceptor('image', { storage }))
   create(
-    @Body('price', ParseIntPipe) price: number,
+    @Body('price', ParseFloatPipe) price: number,
     @Body() createArticleDto: CreateArticleDto,
     @UploadedFile() image: Express.Multer.File,
   ) {
-    createArticleDto.image = image;
+    createArticleDto.image = image.filename;
     return this.articleService.create(createArticleDto);
   }
 
@@ -42,7 +42,13 @@ export class ArticleController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateArticleDto: UpdateArticleDto) {
+  @UseInterceptors(FileInterceptor('image', { storage }))
+  update(
+    @Param('id') id: string,
+    @Body() updateArticleDto: UpdateArticleDto,
+    @UploadedFile() image: Express.Multer.File,
+  ) {
+    updateArticleDto.image = image.filename;
     return this.articleService.update(id, updateArticleDto);
   }
 

@@ -11,5 +11,5 @@ export class CreateArticleDto {
   @IsNumberString()
   price: number;
 
-  image: Express.Multer.File;
+  image: string;
 }

@@ -4,7 +4,7 @@ import { UpdateArticleDto } from './dto/update-article.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Article } from './entities/article.entity';
 import { Repository } from 'typeorm';
-import { unlinkSync } from 'fs';
+import { deleteFile } from 'src/helper/image.tools';
 
 @Injectable()
 export class ArticleService {
@@ -16,7 +16,6 @@ export class ArticleService {
   async create(createArticleDto: CreateArticleDto) {
     const article = this.articleRepository.create({
       ...createArticleDto,
-      image: createArticleDto.image.filename,
     });
     return await this.articleRepository.save(article);
   }
@@ -30,18 +29,33 @@ export class ArticleService {
   }
 
   async update(id: string, updateArticleDto: UpdateArticleDto) {
-    const oldArt = this.findOne(id);
-    if (!oldArt) {
-      throw new BadRequestException('Article not found');
+    try {
+      const oldArt = await this.findOne(id);
+      if (!oldArt) {
+        throw new BadRequestException('Article not found');
+      }
+      await deleteFile(oldArt.image);
+      const article = {
+        ...updateArticleDto,
+      };
+      return await this.articleRepository.update(id, article);
+    } catch (error) {
+      error.status = 500;
+      throw error;
     }
-    const article = {
-      ...updateArticleDto,
-      image: updateArticleDto.image.filename,
-    };
-    return await this.articleRepository.update(id, article);
   }
 
   async remove(id: string) {
-    return await this.articleRepository.delete(id);
+    try {
+      const article = await this.findOne(id);
+      if (!article) {
+        throw new BadRequestException('Article not found');
+      }
+      await deleteFile(article.image);
+      return await this.articleRepository.delete(id);
+    } catch (error) {
+      error.status = 500;
+      throw error;
+    }
   }
 }
